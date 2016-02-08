@@ -65,7 +65,7 @@ class Gene:
         #print(self)
             
     def Mutate(self):
-        mutation_precentage = .4
+        mutation_precentage = .9
         while(random.randint(0,1000) < 1000*mutation_precentage):
             selection = random.randint(0, 1)
             #print("Mutation! " + str(selection))
@@ -119,8 +119,8 @@ class Gene:
             if(self.correct_board[num] != 'X'):
                 self.board[num] = int(self.correct_board[num])
 
-def create_and_mutate(population, input_board, width, height, parent1):
-    new_gene = Gene(input_board, width, height, parent1)
+def create_and_mutate(population, input_board, width, height, parent1, parent2):
+    new_gene = Gene(input_board, width, height, parent1, parent2)
     new_gene.Mutate()
     population.append(new_gene)
 
@@ -131,7 +131,7 @@ def main():
     input_board = file.readline().strip().split(',')
     
     #Constants
-    population_size = 10   
+    population_size = 100   
     
     #Create Genes 
     population = []
@@ -143,23 +143,33 @@ def main():
     pp.pprint(population)
     print("--------------")
     generation = 0 
+    max_fitness = []
     while population[0].Get_Fitness() != 0:
         parent1 = population[0]
-        #parent2 = population[1]
+        parent2 = population[1]
         population.clear()
         population.append(parent1)
         for i in range(population_size-1):
-                t = threading.Thread(target=create_and_mutate, args = (population, input_board, width, height, parent1))
-                t.daemon = True
-                t.start()
+            #create_and_mutate(population, input_board, width, height, parent1, parent2)
+            t = threading.Thread(target=create_and_mutate, args = (population, input_board, width, height, parent1, parent2))
+            t.daemon = True
+            t.start()
 
         population.sort()
         generation += 1
         if(generation % 1000 == 0):
+            max_fitness.append(population[0].Get_Fitness())
             print("Generation " + str(generation))
             print("Fitness-" +str(population[0].Get_Fitness()))
 
+    print(max_fitness)
     pp.pprint(population)
+    
+    outfile = open('out.txt', 'a')
+    outfile.write("Generations:" + str(generation) + '\n')
+    outfile.write(str(input_board) + '\n')
+    outfile.write(str(population[0].board)+ '\n')
+    outfile.write(str(max_fitness)+ '\n\n')
 
 if __name__ == '__main__':
     main()
