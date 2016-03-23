@@ -22,18 +22,19 @@ class Gene(object):
         self.correct_board = correct_board
         
         if(parent1 != None and parent2 != None):
-            self.Crossover_Create_Two_Parents(parent1,parent2)
+            self.Crossover_Create(parent1,parent2)
         elif(parent1 != None):
-            self.Crossover_Create_One_Parent(parent1)
+            self.Crossover_Create(parent1)
         else:
             self.Gene_Create()  
         return 
         
-    def Create_Gene_From_Parent(cls, parent1, parent2= None):
-        if(parent2 != None):
-            return Gene(parent1.correct_board, parent1.width, parent1.height, parent1, parent2)
-        else:
+    def Create_Gene_From_Parent(cls, parent1, parent2 = None):
+        if(parent2 == None):
             return Gene(parent1.correct_board, parent1.width, parent1.height, parent1)
+        else:
+            return Gene(parent1.correct_board, parent1.width, parent1.height, parent1, parent2)
+            
 
 
     def Update_Choices(self,board):
@@ -74,68 +75,177 @@ class Gene(object):
             
     def Mutate(self, mutation_precentage):
         while(random.randint(0,1000) < 1000*mutation_precentage):
-            selection = random.randint(0, 2)
+            selection = random.randint(0, 1000)
             #print("Mutation! " + str(selection))
-            if(selection == 0):
+            if(selection <= 330):
                 #Substution
                 substute_index = -1
                 while(substute_index == -1 or self.correct_board[substute_index] != 'X' ):
                     substute_index = random.randint(0, len(self.board)-1)
                 self.board[substute_index] = random.randint(1,self.width)
-            if(selection == 1):
+            elif(selection <= 660):
                 #Swap
                 rand_pos1 = -1
                 rand_pos2 = -1
                 while(rand_pos1 == -1 or self.correct_board[rand_pos1] != 'X' or self.correct_board[rand_pos2] != 'X' ):
                     rand_pos1, rand_pos2  = random.sample(range(len(self.board)), 2)
                 self.board[rand_pos1], self.board[rand_pos2] = self.board[rand_pos2], self.board[rand_pos1]
-            if(selection == 2):
+            elif(selection <= 800):
+                #Shuffle Row
+                row_num = random.randint(0, self.height-1)
+                row = self.board[self.width*row_num:self.width*(1+row_num)]
+                random.shuffle(row)
+                self.board[self.width*row_num:self.width*(1+row_num)] = row
+                self.replace_Fixed()
+            elif(selection <= 1000):
                 #Local Search 
             
+                #Get a random row
                 row_num = random.randint(0, self.height-1)
                 row = self.board[self.width*row_num:self.width*(1+row_num)]
                 row_set = set(row)
                 
+                #If the row does not contain every number
                 if(len(row_set) != self.width):
+                    #Find a number not in the set
+                    number = -1                    
                     for i in range(1,self.width+1):
                         if i not in row_set:
-                            check_order = list(range(self.width))
-                            random.shuffle(check_order)
-                            for j in check_order:
-                                #print("J={}, Width ={} Row Num={}".format(j,self.width,row_num))
-                                if(self.correct_board[self.width*row_num+j] != 'X'):
-                                    row[j] = i
-                                    break
+                            number = i
+                            break
+                    
+                    #Find a Duplicate number
+                    new_number = -1                    
+                    for i in range(1,self.width+1):
+                        if i not in row_set:
+                            new_number = i
+                            break
+                        else:
+                            row_set.remove(i)
+                        
+                    #Check spots for fixed spots
+                    check_order = list(range(self.width))
+                    random.shuffle(check_order)
+                    for j in check_order:
+                        if(self.correct_board[self.width*row_num+j] != 'X' and self.board[self.width*row_num+j] == new_number):
+                            row[j] = number
+                                    
                         break
-                                
-                self.board[self.width*row_num:self.width*(1+row_num)] = row            
+                    
+                    #Replace the board 
+                    self.board[self.width*row_num:self.width*(1+row_num)] = row
+                    
+                #Do Nothing
+                else:
+                    pass
                 
 
         
         self.Update_Fitness()
         
-    def Crossover_Create_Two_Parents(self, parent1, parent2):
-        new_board = copy.deepcopy(parent1.board)
-        maxlength = len(self.board)
-        limits = sorted([random.randint(0, maxlength) for k in range(2)])
-        new_board[limits[0]:limits[1]] = parent2.board[limits[0]:limits[1]]
-        self.board = new_board
+    def Crossover_Create(self, parent1, parent2 = None):
+        if(parent2 == None):
+            parent2 = Gene(self.correct_board, self.width, self.height)
+        self.board = copy.deepcopy(parent1.board)
+        
+        #Random Crossever
+        selection = random.randint(0, 1)
+        if(selection == 0):
+            self.Column_Crossover(parent2)
+        if(selection == 1):
+            self.Line_Crossover(parent2)
+        else:
+            self.Random_Crossover(parent2)
+
         self.Update_Fitness()
         
-    def Crossover_Create_One_Parent(self, parent1):
-        self.Gene_Create()
+
+    def Random_Crossover(self, parent):
         maxlength = len(self.board)
         limits = sorted([random.randint(0, maxlength) for k in range(2)])
-        self.board[limits[0]:limits[1]] = parent1.board[limits[0]:limits[1]]
-        self.replace_Fixed()
-        self.Update_Fitness()
+        self.board[limits[0]:limits[1]] = parent.board[limits[0]:limits[1]]
+
+    def Line_Crossover(self,parent):
+        line_number = random.randint(0, self.height)
+        self.board[self.width*line_number:self.width*(1+line_number)] = parent.board[self.width*line_number:self.width*(1+line_number)]
+    
+    def Column_Crossover(self,parent):
+         column_number = random.randint(0, self.width)
+         self.board[column_number::self.width] = parent.board[column_number::self.width]
         
+        
+
     def Get_Fitness(self): 
         return self.fitness
     def __lt__(self, other):
         return (self.fitness) < (other.fitness)
     def __repr__(self):
         return("Fitness:" + str(self.fitness) + "-" + str(self.board))
+    def pretty_print(self):
+        pretty_board = ""
+        current_row = 0
+        for x in range(self.width):
+            if(current_row % pow(self.height,0.5)) == 0 and (current_row != 0) and (current_row != self.height-1):       
+                pretty_board += '\n'
+            row = self.board[self.width*x:self.width*(1+x)]
+            pretty_board += "["
+            for y in range(len(row)):
+                if(y % pow(self.width,0.5) == 0 and (y != 0) and (y != self.width-1)):
+                    pretty_board += ']['
+                
+                is_incorrect = self.index_is_incorect(y+current_row*self.width)
+                if(is_incorrect == 1):
+                    pretty_board += '(' + str(row[y]) + ')'
+                elif(is_incorrect == 2):
+                    pretty_board += '{' + str(row[y]) + '}'
+                elif(is_incorrect == 3):
+                    pretty_board += '<' + str(row[y]) + '>'
+                else:
+                    pretty_board += ' ' + str(row[y]) + ' '
+            
+            pretty_board += ']\n'
+            current_row += 1
+        return(pretty_board)        
+        
+    def index_is_incorect(self,index):
+        #Get the value at the index
+        value = self.board[index]
+
+        #create a temp booard and replace the value with -1        
+        temp_board = self.board.copy()
+        temp_board[index] = -1
+        
+        
+        #Get line
+        line_num = index // self.width
+        line = temp_board[self.width*line_num:self.width*(1+line_num)]
+        if(value in set(line) ):
+            return 1 
+        
+        #Get column
+        col_num = int(index % self.height)
+        col = temp_board[col_num::self.width]
+        if(value in set(col)):
+            return 2
+        
+        #Get box
+        box = []
+        col_subsquare_num = (col_num//self.subsquare_height)*self.subsquare_height
+        line_subsquare_num = (line_num//self.subsquare_width)*self.subsquare_width
+        #print(str(col_subsquare_num) + " " +  str(line_subsquare_num))
+        for offset in range(0,(self.width//self.subsquare_width)):
+            off_width = offset*self.width
+            box += temp_board[
+                        col_subsquare_num+(line_subsquare_num*self.width)+off_width: #start ofset
+                        col_subsquare_num+(line_subsquare_num*self.width)+self.subsquare_width+off_width]#End ofset
+        #print(box)
+        if(value in set(box)):
+            return 3
+            
+        return 0    
+
+        
+        
     def Gene_Create(self):
         self.board = []
         
@@ -143,8 +253,6 @@ class Gene(object):
         #Fill with Random Nummbers
         for line_num in range(self.height):
             self.board += random.sample(range(1,self.width+1),self.width)
-            if(self.correct_board[count] != 'X'):
-                self.board[num] = int(self.correct_board[num])
             
         self.replace_Fixed()
         
@@ -189,9 +297,25 @@ def create_population(population_size, input_board, width, height):
     pp.pprint(population)
     return population
 
-def evolve_until_convergence(population, mutation_precentage, tournament_size, elitism):
+def two_parent_tournament_select(population, tournament_size, mutation_precentage):
+    tournament = sorted(random.sample(population, tournament_size))
+    new_gene = Gene.Create_Gene_From_Parent(Gene, tournament[0], tournament[1])
+    new_gene.Mutate(mutation_precentage)
+    return new_gene 
+    
+def one_parent_tournament_select(population, tournament_size, mutation_precentage):
+    tournament = sorted(random.sample(population, tournament_size))
+    new_gene = Gene.Create_Gene_From_Parent(Gene,tournament[0])
+    new_gene.Mutate(mutation_precentage)
+    return new_gene 
+
+def evolve_until_convergence(population, mutation_precentage, mutation_generations_increase, mutation_generations_increase_percentage, generation_wipe_after, tournament_size, elitism):
     population_size = len(population)
     generation = 0 
+    previous_best = 100000
+    generations_at_current_best = 1 
+    additional_mutation_constant = 0
+    
     max_fitness = []
     avg_fitness = []
     while population[0].Get_Fitness() != 0:
@@ -205,23 +329,53 @@ def evolve_until_convergence(population, mutation_precentage, tournament_size, e
             new_population.append(population[top_gene])
         
         
-        for i in range(population_size-1):
-            tournament = sorted(random.sample(population, tournament_size))
-            new_gene = Gene.Create_Gene_From_Parent(tournament[0], tournament[1])
-            new_gene.Mutate(mutation_precentage)
-            new_population.append(new_gene) 
+        while len(new_population) != population_size:
+            new_population.append(two_parent_tournament_select(population, tournament_size, mutation_precentage + additional_mutation_constant))
+            #new_population.append(one_parent_tournament_select(population, tournament_size, mutation_precentage))
+
 
         new_population.sort()
         population = new_population
+        
+        #Increase mutation constant
+        if(previous_best == population[0].Get_Fitness()):
+            generations_at_current_best += 1
+            if(generations_at_current_best % mutation_generations_increase == 0 and mutation_precentage + additional_mutation_constant <= .8):
+                additional_mutation_constant += mutation_generations_increase_percentage
+        else:
+            previous_best = population[0].Get_Fitness()
+            generations_at_current_best = 1
+            additional_mutation_constant = 0
+        
+        if(generations_at_current_best >= generation_wipe_after):
+            print("---------Wiping Population-----------")
+            population = create_population(population_size, population[0].correct_board, population[0].width, population[0].height)
+        
         generation += 1
-        if(generation % 10 == 0):
+        
+        if(generation % 1 == 0):
             max_fitness.append(population[0].Get_Fitness())
             avg_fitness.append(sum([x.Get_Fitness() for x in population])/population_size)
             print("Generation " + str(generation))
             print("Fitness-" +str(max_fitness[-1]))
             print("Avg Fitness=" + str(avg_fitness[-1]))
+            print("Current Mutation=" + str(mutation_precentage + additional_mutation_constant))
+            print("Generations At current Best=" + str(generations_at_current_best))
             print()
             #pp.pprint(population)
+            
+        if(generation % 100 == 0):
+            outfile = open('log.txt', 'a')
+            outfile.write("--------------------------------------" + '\n')
+            outfile.write("Generation " + str(generation) + '\n')
+            outfile.write("Fitness-" +str(max_fitness[-1]) + '\n')
+            outfile.write("Avg Fitness=" + str(avg_fitness[-1]) + '\n')
+            outfile.write("Current Mutation=" + str(mutation_precentage + additional_mutation_constant) + '\n')
+            outfile.write("Generations At current Best=" + str(generations_at_current_best) + '\n\n')
+            outfile.write(population[0].pretty_print() + '\n')
+            #outfile.write(pp.pformat(population) + '\n\n')
+            outfile.close()
+            
             
     print(max_fitness)
     pp.pprint(population)
@@ -231,9 +385,12 @@ def evolve_until_convergence(population, mutation_precentage, tournament_size, e
 def main():
     
     #Constants
-    population_size = 100
+    population_size = 1000
     mutation_precentage = .1
-    tournament_size = 5
+    mutation_generations_increase = 1000
+    mutation_generations_increase_percentage = .01
+    generation_wipe_after = 50000
+    tournament_size = 2
     elitism = 5
 
     #Read in Board
@@ -243,7 +400,13 @@ def main():
     population = create_population(population_size, input_board, width, height)
     
     
-    population, generation, max_fitness, avg_fitness = evolve_until_convergence(population, mutation_precentage, tournament_size, elitism)
+    population, generation, max_fitness, avg_fitness = evolve_until_convergence(population, 
+                                                                                mutation_precentage,
+                                                                                mutation_generations_increase,
+                                                                                mutation_generations_increase_percentage,
+                                                                                generation_wipe_after,
+                                                                                tournament_size, 
+                                                                                elitism)
     
 
 
@@ -253,7 +416,8 @@ def main():
     outfile.write("Generations:" + str(generation) + '\n')
     outfile.write(str(input_board) + '\n')
     outfile.write(str(population[0].board)+ '\n')
-    outfile.write(str(max_fitness)+ '\n\n')
+    outfile.write(str(max_fitness)+ '\n')
+    outfile.write(str(avg_fitness)+ '\n\n')
 
 if __name__ == '__main__':
     main()
