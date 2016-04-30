@@ -4,19 +4,15 @@ import copy
 
 class Gene(object):
     """A Simple Class to Represent a Gene"""
-    correct_board = []
-    board = []
-    width = 0
-    height = 0
-    subsquare_width = 0
-    subsquare_height = 0
-    fitness = 0
+    
     def __init__(self, correct_board, width, height, parent1 = None, parent2 = None):
         self.width = width
         self.height = height
         self.subsquare_width = int(math.sqrt(width))
         self.subsquare_height = int(math.sqrt(height))
         self.correct_board = correct_board
+        self.board = []
+        self.fitness = 0
         
         if(parent1 != None and parent2 != None):
             self.Crossover_Create(parent1,parent2)
@@ -32,8 +28,6 @@ class Gene(object):
         else:
             return Gene(parent1.correct_board, parent1.width, parent1.height, parent1, parent2)
             
-
-
     def Update_Choices(self,board):
         self.board = board
         self.Update_Fitness()
@@ -66,75 +60,124 @@ class Gene(object):
                     
                 #print(line)
                 self.fitness += self.height - len(set(line))
-            
+        
+        #Add Random Precentage
+        self.fitness += random.random()
+        
         #print("Fitness:" + str(self.fitness))
         #print(self)
             
     def Mutate(self, mutation_precentage):
-        while(random.randint(0,1000) < 1000*mutation_precentage):
-            selection = random.randint(0, 1000)
+        count = 0
+        while(random.randint(0,1000) < 1000*mutation_precentage and count < 30):
+            count += 1
+            selection = random.randint(0, 100)
             #print("Mutation! " + str(selection))
-            if(selection <= 330):
+            if(selection <= 33):
                 #Substution
                 substute_index = -1
-                while(substute_index == -1 or self.correct_board[substute_index] != 'X' ):
+                while(substute_index != -1 and self.correct_board[substute_index] != 'X' ):
                     substute_index = random.randint(0, len(self.board)-1)
                 self.board[substute_index] = random.randint(1,self.width)
-            elif(selection <= 660):
-                #Swap
+            elif(selection <= 66):
+                #Swap random
                 rand_pos1 = -1
                 rand_pos2 = -1
-                while(rand_pos1 == -1 or self.correct_board[rand_pos1] != 'X' or self.correct_board[rand_pos2] != 'X' ):
+                while(rand_pos1 != -1 and self.correct_board[rand_pos1] != 'X' and self.correct_board[rand_pos2] != 'X' ):
                     rand_pos1, rand_pos2  = random.sample(range(len(self.board)), 2)
+                
                 self.board[rand_pos1], self.board[rand_pos2] = self.board[rand_pos2], self.board[rand_pos1]
-            elif(selection <= 800):
+            elif(selection <= 100):
                 #Shuffle Row
                 row_num = random.randint(0, self.height-1)
                 row = self.board[self.width*row_num:self.width*(1+row_num)]
                 random.shuffle(row)
                 self.board[self.width*row_num:self.width*(1+row_num)] = row
                 self.replace_Fixed()
-            elif(selection <= 1000):
-                #Local Search 
+
+#            elif(selection <= 75):
+#                #Substute with incorrect check
+#                substute_index = -1
+#                locations = [x for x in range(len(self.board))]
+#                random.shuffle(locations)
+#                current_location = 0
+#                while(substute_index != -1 and self.correct_board[substute_index] != 'X' and current_location < len(self.board)):
+#                    index = locations[current_location]
+#                    if(self.index_is_incorect(index) > 0):
+#                        substute_index = index
+#                        
+#                    current_location += 1
+#                    
+#                self.board[substute_index] = random.randint(1,self.width)
+#            elif(selection <= 100):
+#                #Swap with incorrect check
+#                rand_pos1 = -1
+#                rand_pos2 = -1
+#                
+#                #Find an Incorrect Value for #1
+#                locations = [x for x in range(len(self.board))]
+#                random.shuffle(locations)
+#                current_location = 0
+#                while(rand_pos1 != -1 and self.correct_board[rand_pos1] != 'X' and current_location < len(self.board)):
+#                    index = locations[current_location]
+#                    if(self.index_is_incorect(index) > 0):
+#                        rand_pos1 = index
+#                    current_location += 1
+#            
+#                #Find an Incorrect Value for #2
+#                locations = [x for x in range(len(self.board))]
+#                random.shuffle(locations)
+#                current_location = 0
+#                while(rand_pos2 != -1 and self.correct_board[rand_pos2] != 'X' and current_location < len(self.board)):
+#                    index = locations[current_location]
+#                    if(self.index_is_incorect(index) > 0):
+#                        rand_pos2 = index
+#                    current_location += 1
+#
+#                #Swap them
+#                self.board[rand_pos1], self.board[rand_pos2] = self.board[rand_pos2], self.board[rand_pos1]
             
-                #Get a random row
-                row_num = random.randint(0, self.height-1)
-                row = self.board[self.width*row_num:self.width*(1+row_num)]
-                row_set = set(row)
-                
-                #If the row does not contain every number
-                if(len(row_set) != self.width):
-                    #Find a number not in the set
-                    number = -1                    
-                    for i in range(1,self.width+1):
-                        if i not in row_set:
-                            number = i
-                            break
-                    
-                    #Find a Duplicate number
-                    new_number = -1                    
-                    for i in range(1,self.width+1):
-                        if i not in row_set:
-                            new_number = i
-                            break
-                        else:
-                            row_set.remove(i)
-                        
-                    #Check spots for fixed spots
-                    check_order = list(range(self.width))
-                    random.shuffle(check_order)
-                    for j in check_order:
-                        if(self.correct_board[self.width*row_num+j] != 'X' and self.board[self.width*row_num+j] == new_number):
-                            row[j] = number
-                                    
-                        break
-                    
-                    #Replace the board 
-                    self.board[self.width*row_num:self.width*(1+row_num)] = row
-                    
-                #Do Nothing
-                else:
-                    pass
+
+
+#            elif(selection <= 100):
+#                #Local Search 
+#            
+#                #Get a random row
+#                row_num = random.randint(0, self.height-1)
+#                row = self.board[self.width*row_num:self.width*(1+row_num)]
+#                row_set = set(row)
+#                
+#                #If the row does not contain every number
+#                if(len(row_set) != self.width):
+#                    #Find a number not in the set
+#                    number = -1                    
+#                    for i in range(1,self.width+1):
+#                        if i not in row_set:
+#                            number = i
+#                            break
+#                    
+#                    #Find a Duplicate number
+#                    new_number = -1                    
+#                    for i in range(1,self.width+1):
+#                        if i not in row_set:
+#                            new_number = i
+#                            break
+#                        else:
+#                            row_set.remove(i)
+#                        
+#                    #Check spots for fixed spots
+#                    check_order = list(range(self.width))
+#                    random.shuffle(check_order)
+#                    for j in check_order:
+#                        if(self.correct_board[self.width*row_num+j] != 'X' and self.board[self.width*row_num+j] == new_number):
+#                            row[j] = number
+#                                    
+#                        break
+#                    
+#                    #Replace the board 
+#                    self.board[self.width*row_num:self.width*(1+row_num)] = row
+#                    
+#                #Do Nothing
                 
 
         
