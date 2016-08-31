@@ -1,4 +1,5 @@
 # Sudoku Genetic Algorithm Solver  
+This program was written as a class project to attempt to solve Sudoku Puzzles with Genetic Algorithms. It is successful at solving the puzzles however it is not very optimized. 
 
 ## Installing  
 This application was written in Python 3 using the Anaconda Suite.  
