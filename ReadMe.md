@@ -23,65 +23,11 @@ Two different methods of crossover was used. It randomly decided between which m
 ### Mutation 
 The three decided upon mutation methods were substation, swap and shuffle. Substation involved replacing a random non-fixed number with a new random number. Swap involved switching the places of two random non-fixed numbers. Shuffle involved shuffling the entire board except the non-fixed numbers. Shuffle was included to aid the population in diverging from a local minimum. With those mutation functions, additionally a variable mutation rate was implemented. This involved raising the mutation if the max fitness value stayed constant for a chosen number of generations. This helped the genetic algorithm diverge from local minimum.
 
-## Getting Started
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
+## Installing  
+This application was written in Python 3 using the Anaconda Suite.  
+To install Anaconda visit: https://www.continuum.io/downloads  
 
-### Prerequisities
-
-What things you need to install the software and how to install them
-
-```
-Give examples
-```
-
-### Installing
-
-A step by step series of examples that tell you have to get a development env running
-
-Stay what the step will be
-
-```
-Give the example
-```
-
-And repeat
-
-```
-until finished
-```
-
-End with an example of getting some data out of the system or using it for a little demo
-
-## Running the tests
-
-Explain how to run the automated tests for this system
-
-### Break down into end to end tests
-
-Explain what these tests test and why
-
-```
-Give an example
-```
-
-### And coding style tests
-
-Explain what these tests test and why
-
-```
-Give an example
-```
-
-## Deployment
-
-Add additional notes about how to deploy this on a live system
-
-## Built With
-
-* Dropwizard - Bla bla bla
-* Maven - Maybe
-* Atom - ergaerga
 
 ## Contributing
 
@@ -89,13 +35,13 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduc
 
 ## Versioning
 
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags). 
+We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/tylerburnham42/PythonSudokuGASolver/tags). 
 
 ## Authors
 
 * **Billie Thompson** - *Initial work* - [PurpleBooth](https://github.com/PurpleBooth)
 
-See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
+See also the list of [contributors](https://github.com/tylerburnham42/PythonSudokuGASolver/contributors) who participated in this project.
 
 ## License
 
