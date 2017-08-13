@@ -97,7 +97,7 @@ Generations:57
 ```
 
 ### graph.png
-![](Runs/2016-04-26 19-56-00 - Success/graph.png)
+![](Runs/2016-04-26%2019-56-00%20-%20Success/graph.png)
 
 ## Contributing
 
